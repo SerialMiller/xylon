@@ -259,6 +259,9 @@
     @keyframes wink { from { transform: scale(1) rotate(-1deg); } to { transform: scale(1.07) rotate(1deg); } }
     .win-names { font-family: Arial, sans-serif; color: var(--soft-green); font-size: .9rem; letter-spacing: 2px; }
     .win-flavor { font-family: Arial, sans-serif; font-size: 1.05rem; color: var(--white); max-width: 360px; line-height: 1.5; }
+    .win-player-quote { font-family: Arial, sans-serif; font-size: .88rem; color: var(--gold); font-style: italic; max-width: 340px; line-height: 1.5; opacity: .9; }
+    .win-player-quote::before { content: '"'; }
+    .win-player-quote::after  { content: '"'; }
     .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
     #s-loss { justify-content: center; text-align: center; gap: 20px; }
@@ -374,6 +377,7 @@
   <div class="win-head">TUDDY!!</div>
   <div class="win-names" id="win-names"></div>
   <div class="win-flavor" id="win-flavor"></div>
+  <div class="win-player-quote" id="win-player-quote" style="display:none"></div>
   <div class="btn-row">
     <button class="btn btn-gold" onclick="resetGame()">Run It Back</button>
     <button class="btn btn-ghost" id="share-btn" onclick="shareResult()" style="display:none">Share 📤</button>
@@ -448,6 +452,41 @@ const STYLE_PROBS = {
   conservative: [.02, .52, .34, .12],
   balanced:     [.03, .45, .33, .19],
   risky:        [.06, .28, .28, .38],
+};
+
+// ─── TOP-TIER PLAYERS ────────────────────────────────────────────
+// Each top-tier player drafted boosts TD probability and scoring range.
+const TOP_TIER = new Set(['Conor McDonough', 'World B Free', 'BDG']);
+
+function topTierCount() {
+  return selected.filter(i => TOP_TIER.has(PLAYERS[i].name)).length;
+}
+
+// Boost td% and yards%, normalize sack/turnover to fill remainder.
+function boostProbs(base, tc) {
+  if (tc === 0) return base;
+  let [td, yr, sk, to] = base;
+  const tdAdd = [0, .06, .13, .20][Math.min(tc, 3)];
+  const yrAdd = [0, .04, .07, .10][Math.min(tc, 3)];
+  td = Math.min(td + tdAdd, .50);
+  yr = Math.min(yr + yrAdd, .60);
+  const rem = 1 - td - yr;
+  const skShare = sk / (sk + to);
+  return [td, yr, rem * skShare, rem * (1 - skShare)];
+}
+
+// Top-tier expands how far out a td_attempt can convert.
+function dynScoreRange(tc) { return [6, 10, 14, 18][Math.min(tc, 3)]; }
+
+// ─── PLAYER WIN QUOTES ───────────────────────────────────────────
+const PLAYER_QUOTES = {
+  'Braxner':     'there is no match for me after I have conquered torts',
+  'Brandon':     'the k hole upon victory will be ... uh ... generational',
+  'Kaba':        'I love New England sports heritage',
+  'David':       "Minnesota isn't fly over country!?",
+  'Hudson':      "I'm going to teach you something unless you teach me what's up",
+  'Will Sweatt': 'playing this is a good T but bad for your T',
+  'Tyler':       "Marvin's shroom will see you now",
 };
 
 // ─── DEFENSE ─────────────────────────────────────────────────────
@@ -709,20 +748,24 @@ function callPlay(playId) {
 }
 
 function executePlay(playId, play) {
-  const style = (playId==='miller'&&hasMohn()) ? 'special' : play.style;
-  const [td,yr,sk] = STYLE_PROBS[style];
+  const isMM = playId==='miller'&&hasMohn();
+  const tc   = topTierCount();
+  const style = isMM ? 'special' : play.style;
+  const [td,yr,sk] = boostProbs(STYLE_PROBS[style], isMM ? 0 : tc);
+  const scoreRange = isMM ? SCORE_RANGE : dynScoreRange(tc);
   const r = Math.random();
   const raw = r<td?'td_attempt':r<td+yr?'yards':r<td+yr+sk?'sack':'turnover';
-  const isMM = playId==='miller'&&hasMohn();
-  const outcome = (raw==='td_attempt'&&yardsToGo<=SCORE_RANGE)?'td':raw==='td_attempt'?'yards':raw;
+  let outcome = (raw==='td_attempt'&&yardsToGo<=scoreRange)?'td':raw==='td_attempt'?'yards':raw;
 
   let newYtg=yardsToGo,yardsMoved=0,atOne=false;
   if(outcome==='td')newYtg=0;
   else if(outcome==='yards'){
     const gain=randInt(10,18);
     newYtg=yardsToGo-gain;
-    if(!isMM&&newYtg<1){newYtg=1;atOne=true;}
-    newYtg=Math.max(newYtg,0);
+    if(!isMM && tc===0 && newYtg<1){newYtg=1;atOne=true;}
+    // top-tier players can punch through to the end zone on a yards play
+    if(!isMM && tc>0 && newYtg<=0){outcome='td';newYtg=0;}
+    else newYtg=Math.max(newYtg,0);
     yardsMoved=yardsToGo-newYtg;
   } else if(outcome==='sack'){
     const loss=randInt(8,13);
@@ -765,6 +808,11 @@ function resolveOutcome(outcome,isMM,yardsMoved,atOne){
     setTimeout(()=>{
       document.getElementById('win-names').textContent=names;
       document.getElementById('win-flavor').textContent=(isMM?pick(FLAVOR.td_mohn):pick(FLAVOR.td_lucky))+' THE PARK GOES WILD!';
+      // show a random player quote from whoever on the squad has one
+      const quotable=selected.map(i=>PLAYERS[i].name).filter(n=>PLAYER_QUOTES[n]);
+      const qEl=document.getElementById('win-player-quote');
+      if(quotable.length){qEl.textContent=PLAYER_QUOTES[pick(quotable)];qEl.style.display='block';}
+      else qEl.style.display='none';
       document.getElementById('share-btn').style.display=navigator.share?'inline-block':'none';
       show('s-win');confetti();
     },700);
