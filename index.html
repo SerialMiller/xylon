@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Xylon Park Tuddies</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --green-dark: #0d360d;
+      --gold: #FFD700;
+      --gold-dark: #b8940a;
+      --gold-dim: rgba(255,215,0,.18);
+      --red: #e03030;
+      --red-dark: #8B0000;
+      --soft-green: #7ec97e;
+      --white: #f5f5f5;
+    }
+
+    body {
+      font-family: 'Impact', 'Arial Black', Arial, sans-serif;
+      background: var(--green-dark);
+      color: var(--white);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        180deg, transparent 0, transparent 59px,
+        rgba(255,255,255,.035) 59px, rgba(255,255,255,.035) 61px
+      );
+      pointer-events: none; z-index: 0;
+    }
+
+    .screen {
+      display: none;
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      padding: 28px 16px 48px;
+      flex-direction: column; align-items: center;
+    }
+    .screen.active { display: flex; }
+
+    #s-title { justify-content: center; gap: 24px; text-align: center; }
+    .title-ball { font-size: 4.5rem; animation: bob 1.3s ease-in-out infinite alternate; }
+    @keyframes bob {
+      from { transform: translateY(0) rotate(-6deg); }
+      to   { transform: translateY(-18px) rotate(6deg); }
+    }
+    .game-name {
+      font-size: clamp(2.8rem, 11vw, 6.5rem);
+      text-transform: uppercase; color: var(--gold);
+      text-shadow: 3px 3px 0 #5a3d00, 7px 7px 0 rgba(0,0,0,.4);
+      line-height: .87; letter-spacing: -1px;
+    }
+    .game-sub { font-size: .9rem; letter-spacing: 4px; color: var(--soft-green); text-transform: uppercase; font-family: Arial, sans-serif; }
+
+    .btn {
+      font-family: 'Impact', 'Arial Black', sans-serif;
+      font-size: 1.2rem; padding: 15px 36px; border: none; cursor: pointer;
+      text-transform: uppercase; letter-spacing: 2px; border-radius: 5px;
+      transition: transform .1s, box-shadow .1s; -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation; min-height: 52px;
+    }
+    .btn:active { transform: scale(.94) !important; box-shadow: none !important; }
+    .btn-gold { background: var(--gold); color: var(--green-dark); box-shadow: 4px 4px 0 var(--gold-dark); }
+    .btn-gold:hover { background: #ffe840; transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--gold-dark); }
+    .btn-ghost { background: transparent; color: var(--soft-green); border: 2px solid rgba(126,201,126,.4); font-size: 1rem; padding: 12px 28px; min-height: 48px; letter-spacing: 1px; }
+    .btn-play {
+      background: rgba(255,255,255,.09); color: var(--white);
+      border: 2px solid rgba(255,255,255,.22);
+      width: 100%; max-width: 440px; font-size: 1rem;
+      padding: 16px 18px; border-radius: 9px; text-align: left; margin: 4px 0; min-height: 54px;
+    }
+    .btn-play:hover { background: var(--gold); color: var(--green-dark); border-color: var(--gold); transform: translate(-2px,-2px); box-shadow: 4px 4px 0 var(--gold-dark); }
+    .btn-play-special { border-color: var(--gold) !important; background: rgba(255,215,0,.12) !important; color: var(--gold) !important; }
+    .btn-play-special:hover { background: var(--gold) !important; color: var(--green-dark) !important; }
+
+    #s-draft { justify-content: flex-start; gap: 20px; }
+    .section-title { font-size: 1.7rem; color: var(--gold); text-transform: uppercase; letter-spacing: 3px; text-align: center; }
+    .hint { font-family: Arial, sans-serif; font-size: .85rem; color: var(--soft-green); text-align: center; }
+    .draft-progress { display: flex; gap: 14px; justify-content: center; }
+    .draft-slot {
+      width: 54px; height: 54px; border-radius: 10px;
+      border: 2px solid rgba(255,255,255,.2); background: rgba(255,255,255,.07);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.7rem; transition: all .3s;
+    }
+    .draft-slot.active { border-color: var(--gold); box-shadow: 0 0 14px rgba(255,215,0,.45); }
+    .draft-slot.filled { border-color: var(--soft-green); background: rgba(126,201,126,.15); }
+    .player-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 420px; }
+    .pcard {
+      background: rgba(255,255,255,.09); border: 2px solid rgba(255,255,255,.22);
+      border-radius: 10px; padding: 12px 6px 10px; text-align: center; cursor: pointer;
+      -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+      transition: background .12s, transform .12s, border-color .12s;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+    }
+    .pcard:active { transform: scale(.9); }
+    .pcard:hover { background: rgba(255,255,255,.17); transform: translateY(-2px); }
+    .pcard.selected { border-color: var(--soft-green); background: rgba(126,201,126,.15); pointer-events: none; }
+    .pcard-emoji { font-size: 2rem; }
+    .pcard-name  { font-size: .62rem; font-family: 'Arial Black', Arial, sans-serif; text-transform: uppercase; line-height: 1.2; }
+
+    #s-play { justify-content: center; gap: 14px; text-align: center; }
+    .down-wrap { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+    .down-label-text { font-size: .72rem; letter-spacing: 3px; color: var(--soft-green); text-transform: uppercase; font-family: Arial, sans-serif; }
+    .down-dots { display: flex; gap: 10px; }
+    .dot { width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,.14); border: 2px solid rgba(255,255,255,.28); transition: background .3s; }
+    .dot.used   { background: var(--red); border-color: #ff7070; }
+    .dot.active { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 10px var(--gold); }
+    .down-str { font-size: 1.4rem; }
+    .yards-remaining { font-size: 1rem; color: rgba(255,255,255,.6); font-family: Arial, sans-serif; }
+    .yards-remaining strong { color: var(--gold); font-family: 'Impact', sans-serif; font-size: 1.3rem; }
+    .squad-label { font-size: .7rem; letter-spacing: 3px; color: var(--soft-green); text-transform: uppercase; font-family: Arial, sans-serif; }
+    .team-row { display: flex; gap: 7px; justify-content: center; flex-wrap: wrap; }
+    .chip { background: var(--gold-dim); border: 2px solid rgba(255,215,0,.5); border-radius: 6px; padding: 6px 12px; font-size: .78rem; color: var(--gold); font-family: 'Arial Black', Arial, sans-serif; text-transform: uppercase; }
+    .plays-header { font-size: .7rem; letter-spacing: 3px; color: rgba(255,255,255,.4); text-transform: uppercase; font-family: Arial, sans-serif; }
+    .play-options { display: flex; flex-direction: column; align-items: center; width: 100%; }
+
+    #s-outcome { justify-content: center; text-align: center; gap: 16px; }
+    .play-called { font-size: .85rem; color: var(--soft-green); letter-spacing: 2px; font-family: Arial, sans-serif; }
+    .slot-box {
+      width: min(280px, 90vw); height: 170px;
+      border: 4px solid var(--gold); border-radius: 14px;
+      background: rgba(0,0,0,.55);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 6px;
+    }
+    .slot-emoji { font-size: 4rem; line-height: 1; display: block; }
+    .slot-label { font-size: .95rem; letter-spacing: 3px; color: var(--gold); }
+
+    .field-wrap { width: min(480px, 96vw); display: flex; flex-direction: column; gap: 5px; }
+    .field-track {
+      height: 52px; border-radius: 7px; border: 2px solid rgba(255,255,255,.25);
+      background: linear-gradient(90deg, #17501a 0%, #1d6a22 80%, rgba(255,215,0,.25) 92%, rgba(255,215,0,.55) 100%);
+      position: relative; overflow: visible;
+    }
+    .field-track::before {
+      content: ''; position: absolute; inset: 0;
+      background:
+        linear-gradient(90deg, transparent 24.5%, rgba(255,255,255,.18) 24.5%, rgba(255,255,255,.18) 25.5%, transparent 25.5%),
+        linear-gradient(90deg, transparent 49.5%, rgba(255,255,255,.18) 49.5%, rgba(255,255,255,.18) 50.5%, transparent 50.5%),
+        linear-gradient(90deg, transparent 74.5%, rgba(255,255,255,.18) 74.5%, rgba(255,255,255,.18) 75.5%, transparent 75.5%);
+      border-radius: 5px; pointer-events: none;
+    }
+    .field-track::after {
+      content: 'EZ'; position: absolute; right: 0; top: 0; bottom: 0; width: 8%;
+      background: rgba(255,215,0,.2); border-left: 2px solid rgba(255,215,0,.5);
+      border-radius: 0 5px 5px 0; display: flex; align-items: center; justify-content: center;
+      font-size: .58rem; color: rgba(255,215,0,.8); letter-spacing: 1px;
+    }
+    .ball-icon {
+      position: absolute; top: 50%; transform: translate(-50%,-50%);
+      font-size: 1.5rem; transition: left .7s cubic-bezier(.25,.46,.45,.94);
+      z-index: 3; filter: drop-shadow(0 2px 5px rgba(0,0,0,.6));
+    }
+    .field-labels { display: flex; justify-content: space-between; padding: 0 2px; font-size: .56rem; color: rgba(255,255,255,.38); font-family: Arial, sans-serif; }
+    .yards-badge { font-size: 1rem; font-family: Arial, sans-serif; color: var(--soft-green); text-align: center; min-height: 1.4em; transition: color .3s; }
+    .yards-badge.danger  { color: #ff9999; }
+    .yards-badge.warning { color: #ffcc44; }
+    @keyframes near-miss-pulse { from { text-shadow: none; } to { text-shadow: 0 0 14px var(--gold), 0 0 28px var(--gold); } }
+    .near-miss-flash { animation: near-miss-pulse 1s ease infinite alternate; }
+    .outcome-flavor { font-family: Arial, sans-serif; font-size: 1rem; color: rgba(255,255,255,.75); max-width: 380px; line-height: 1.5; font-style: italic; }
+
+    #s-win { justify-content: center; text-align: center; gap: 20px; }
+    .win-head { font-size: clamp(3.5rem, 15vw, 9rem); color: var(--gold); text-shadow: 4px 4px 0 #5a3d00; line-height: .85; animation: wink .5s ease-in-out infinite alternate; }
+    @keyframes wink { from { transform: scale(1) rotate(-1deg); } to { transform: scale(1.07) rotate(1deg); } }
+    .win-names { font-family: Arial, sans-serif; color: var(--soft-green); font-size: .9rem; letter-spacing: 2px; }
+    .win-flavor { font-family: Arial, sans-serif; font-size: 1.05rem; color: var(--white); max-width: 360px; line-height: 1.5; }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+    #s-loss { justify-content: center; text-align: center; gap: 20px; }
+    .loss-head { font-size: clamp(3rem, 13vw, 7.5rem); color: var(--red); text-shadow: 4px 4px 0 var(--red-dark); line-height: .88; }
+    .loss-reason { font-family: Arial, sans-serif; color: #ff9999; font-size: 1rem; max-width: 340px; line-height: 1.55; }
+    .loss-nudge  { font-family: Arial, sans-serif; font-size: .88rem; color: rgba(255,255,255,.35); max-width: 300px; line-height: 1.5; font-style: italic; }
+
+    .confetti-wrap { position: fixed; inset: 0; pointer-events: none; z-index: 999; overflow: hidden; }
+    .confetti-piece { position: absolute; top: -24px; animation: cfall linear forwards; }
+    @keyframes cfall { to { transform: translateY(110vh) rotate(900deg); opacity: 0; } }
+
+    @keyframes shake-h { 0%,100% { transform: translateX(0); } 15%,55% { transform: translateX(-8px); } 35%,75% { transform: translateX(8px); } }
+    .shake { animation: shake-h .5s ease; }
+  </style>
+</head>
+<body>
+
+<div id="s-title" class="screen active">
+  <div class="title-ball">🏈</div>
+  <div class="game-name">Xylon Park<br>Tuddies</div>
+  <div class="game-sub">Est. The Park · 4th &amp; Goal</div>
+  <button class="btn btn-gold" onclick="startDraft()">Take the Field</button>
+</div>
+
+<div id="s-draft" class="screen">
+  <div class="section-title">Draft Your Squad</div>
+  <div class="hint">Pick 3 players to take the field</div>
+  <div class="draft-progress">
+    <div class="draft-slot active" id="ds-0">?</div>
+    <div class="draft-slot"       id="ds-1">?</div>
+    <div class="draft-slot"       id="ds-2">?</div>
+  </div>
+  <div class="player-grid" id="player-grid"></div>
+</div>
+
+<div id="s-play" class="screen">
+  <div class="down-wrap">
+    <div class="down-label-text">Down</div>
+    <div class="down-dots" id="down-dots"></div>
+    <div class="down-str" id="down-str"></div>
+  </div>
+  <div class="yards-remaining"><strong id="ytg-num">—</strong> yards to go</div>
+  <div class="squad-label">Your Squad</div>
+  <div class="team-row" id="team-row"></div>
+  <div class="plays-header">Call the Play</div>
+  <div class="play-options" id="play-options"></div>
+</div>
+
+<div id="s-outcome" class="screen">
+  <div class="play-called" id="play-called"></div>
+  <div class="slot-box" id="slot-box">
+    <span class="slot-emoji" id="slot-emoji">🏈</span>
+    <span class="slot-label" id="slot-label"></span>
+  </div>
+  <div class="field-wrap">
+    <div class="field-track">
+      <div class="ball-icon" id="ball-icon">🏈</div>
+    </div>
+    <div class="field-labels"><span>40</span><span>30</span><span>20</span><span>10</span><span>EZ</span></div>
+    <div class="yards-badge" id="yards-badge"></div>
+  </div>
+  <div class="outcome-flavor" id="outcome-flavor"></div>
+  <button class="btn btn-gold" id="next-btn" onclick="nextPlay()" style="display:none">Next Down ▶</button>
+</div>
+
+<div id="s-win" class="screen">
+  <div class="confetti-wrap" id="confetti-wrap"></div>
+  <div style="font-size:3.5rem">🏆</div>
+  <div class="win-head">TUDDY!!</div>
+  <div class="win-names" id="win-names"></div>
+  <div class="win-flavor" id="win-flavor"></div>
+  <div class="btn-row">
+    <button class="btn btn-gold" onclick="resetGame()">Run It Back</button>
+    <button class="btn btn-ghost" id="share-btn" onclick="shareResult()" style="display:none">Share 📤</button>
+  </div>
+</div>
+
+<div id="s-loss" class="screen">
+  <div style="font-size:3.5rem">💀</div>
+  <div class="loss-head" id="loss-head">STUFFED</div>
+  <div class="loss-reason" id="loss-reason"></div>
+  <div class="loss-nudge"  id="loss-nudge"></div>
+  <button class="btn btn-gold" onclick="resetGame()">Try Again</button>
+</div>
+
+<script>
+const PLAYERS = [
+  { name:'Braxner',         emoji:'💪' }, { name:'Kaba',            emoji:'⚡' },
+  { name:'Carl',            emoji:'🦁' }, { name:'Mohn',            emoji:'🎯' },
+  { name:'David',           emoji:'🔥' }, { name:'Hudson',          emoji:'🚀' },
+  { name:'Tyler',           emoji:'🏃' }, { name:'BDG',             emoji:'😤' },
+  { name:'Brandon',         emoji:'🦅' }, { name:'Ferg',            emoji:'🫡' },
+  { name:'Conor McDonough', emoji:'🍀' }, { name:'Chinmaey Kelkar', emoji:'🧠' },
+  { name:'Carter Sweatt',   emoji:'🤕' }, { name:'Will Sweatt',     emoji:'💦' },
+  { name:'Hartsy',          emoji:'❤️' }, { name:'Jimmy Gruver',    emoji:'🎸' },
+  { name:'Cun',             emoji:'🌀' }, { name:'World B Free',    emoji:'🌍' },
+  { name:'Crey Bankes',     emoji:'🌊' }, { name:'Terror Dog',      emoji:'🐕' },
+  { name:'Sam Gittleman',   emoji:'🎓' },
+];
+
+const PLAYS = [
+  { id:'huck',   name:'Huck It Deep',        icon:'🎯', style:'aggressive' },
+  { id:'kaba',   name:'Elaborate Kaba Play', icon:'✨', style:'kaba'       },
+  { id:'miller', name:'Miller Offense',      icon:'📋', style:'special',   mohnOnly:true },
+];
+
+const STYLE_PROBS = {
+  special:    [.35, .35, .22, .08],
+  aggressive: [.04, .40, .30, .26],
+  kaba:       [.05, .50, .28, .17],
+};
+
+const SPIN_POOL = ['🏈','💨','🌀','⚡','🔥','💥','🎯','⭐','😤','🦅','💯','🎲'];
+const FIELD_MAX = 42, START_YTG = 28, SCORE_RANGE = 6;
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const randInt = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+
+let selected = [], down = 1, yardsToGo = START_YTG, nearMissCount = 0, lastWinInfo = '', spinTimer = null;
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function startDraft() {
+  selected = []; down = 1; yardsToGo = START_YTG; nearMissCount = 0;
+  renderGrid(); renderSlots(); show('s-draft');
+}
+
+function renderGrid() {
+  const g = document.getElementById('player-grid');
+  g.innerHTML = '';
+  PLAYERS.forEach((p, i) => {
+    const el = document.createElement('div');
+    el.className = 'pcard' + (selected.includes(i) ? ' selected' : '');
+    el.innerHTML = `<div class="pcard-emoji">${p.emoji}</div><div class="pcard-name">${p.name}</div>`;
+    el.addEventListener('click', () => pickPlayer(i));
+    g.appendChild(el);
+  });
+}
+
+function renderSlots() {
+  for (let i=0;i<3;i++) {
+    const el = document.getElementById(`ds-${i}`);
+    el.className = 'draft-slot';
+    if (i < selected.length) { el.textContent = PLAYERS[selected[i]].emoji; el.classList.add('filled'); }
+    else if (i === selected.length) { el.textContent = '?'; el.classList.add('active'); }
+    else el.textContent = '?';
+  }
+}
+
+function pickPlayer(i) {
+  if (selected.includes(i) || selected.length >= 3) return;
+  selected.push(i);
+  renderGrid(); renderSlots();
+  if (selected.length >= 3) setTimeout(showPlay, 350);
+}
+
+const hasMohn = () => selected.some(i => PLAYERS[i].name === 'Mohn');
+
+function getPlayOptions() {
+  const opts = PLAYS.filter(p => !p.mohnOnly);
+  if (hasMohn()) opts.push(PLAYS.find(p => p.id === 'miller'));
+  return opts;
+}
+
+function showPlay() {
+  const dots = document.getElementById('down-dots');
+  dots.innerHTML = '';
+  for (let d=1;d<=4;d++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot'+(d<down?' used':d===down?' active':'');
+    dots.appendChild(dot);
+  }
+  document.getElementById('down-str').textContent = ['1st & Goal','2nd & Goal','3rd & Goal','4th & Goal'][down-1];
+  document.getElementById('ytg-num').textContent  = yardsToGo;
+  document.getElementById('team-row').innerHTML = selected.map(i=>`<div class="chip">${PLAYERS[i].emoji} ${PLAYERS[i].name}</div>`).join('');
+  const plays = getPlayOptions();
+  document.getElementById('play-options').innerHTML = plays.map(p =>
+    `<button class="btn btn-play${p.id==='miller'?' btn-play-special':''}" onclick="callPlay('${p.id}')">
+       ${p.icon}&nbsp; ${p.name}
+     </button>`).join('');
+  show('s-play');
+}
+
+function callPlay(playId) {
+  const play = PLAYS.find(p=>p.id===playId);
+  const style = (playId==='miller'&&hasMohn()) ? 'special' : play.style;
+  const [td,yr,sk] = STYLE_PROBS[style];
+  const r = Math.random();
+  const raw = r<td?'td_attempt':r<td+yr?'yards':r<td+yr+sk?'sack':'turnover';
+  const outcome = (raw==='td_attempt'&&yardsToGo<=SCORE_RANGE)?'td':raw==='td_attempt'?'yards':raw;
+
+  let newYtg = yardsToGo, yardsMoved=0, atOne=false;
+  if (outcome==='td') newYtg=0;
+  else if (outcome==='yards') {
+    const gain = randInt(10,18);
+    newYtg = yardsToGo - gain;
+    const isMM = playId==='miller'&&hasMohn();
+    if (!isMM && newYtg<1) { newYtg=1; atOne=true; }
+    newYtg = Math.max(newYtg,0);
+    yardsMoved = yardsToGo-newYtg;
+  } else if (outcome==='sack') {
+    const loss = randInt(8,13);
+    newYtg = Math.min(yardsToGo+loss, FIELD_MAX);
+    yardsMoved = -(newYtg-yardsToGo);
+  }
+
+  document.getElementById('play-called').textContent = '▶ '+play.name;
+  ['slot-label','outcome-flavor'].forEach(id=>document.getElementById(id).textContent='');
+  document.getElementById('next-btn').style.display='none';
+  document.getElementById('slot-emoji').textContent='🏈';
+  document.getElementById('slot-box').style.borderColor='var(--gold)';
+  document.getElementById('yards-badge').textContent='';
+  document.getElementById('yards-badge').className='yards-badge';
+  const ballPct = ytg => Math.min(Math.max(((FIELD_MAX-Math.max(ytg,0))/FIELD_MAX)*100, 2), 97);
+  const ball = document.getElementById('ball-icon');
+  ball.style.transition='none'; ball.style.left=ballPct(yardsToGo)+'%'; void ball.offsetWidth; ball.style.transition='';
+  show('s-outcome');
+
+  let tick=0;
+  if (spinTimer) clearInterval(spinTimer);
+  spinTimer = setInterval(()=>{ document.getElementById('slot-emoji').textContent = SPIN_POOL[tick++%SPIN_POOL.length]; }, 85);
+
+  setTimeout(()=>{
+    clearInterval(spinTimer);
+    const meta = { td:{emoji:'🏆',label:'TOUCHDOWN!!!',border:'#FFD700'}, yards:{emoji:'📏',label:'GOT YARDS',border:'#7ec97e'}, sack:{emoji:'💥',label:'SACK',border:'#ff9944'}, turnover:{emoji:'😱',label:'TURNOVER',border:'#e03030'} }[outcome];
+    document.getElementById('slot-emoji').textContent = meta.emoji;
+    document.getElementById('slot-label').textContent = meta.label;
+    document.getElementById('slot-box').style.borderColor = meta.border;
+    setTimeout(()=>{ yardsToGo=newYtg; ball.style.left=ballPct(newYtg)+'%'; resolveOutcome(outcome,playId,yardsMoved,atOne); }, 350);
+  }, 1400);
+}
+
+function resolveOutcome(outcome, playId, yardsMoved, atOne) {
+  const isMM = playId==='miller'&&hasMohn();
+  const badgeEl = document.getElementById('yards-badge');
+  if (outcome==='td') {
+    document.getElementById('ball-icon').style.left='102%';
+    const names = selected.map(i=>PLAYERS[i].name).join(' · ');
+    lastWinInfo = names+(isMM?'\nMohn + Miller Offense.':'\nAgainst all odds.');
+    setTimeout(()=>{
+      document.getElementById('win-names').textContent = names;
+      document.getElementById('win-flavor').textContent = isMM
+        ? pick(["Mohn finds a hole — somehow, always finds a hole.","The Miller offense. You either run it or you don't score.","Everyone knew the play. Nobody could stop it."]) + ' THE PARK GOES WILD!'
+        : pick(["No way. No way that worked.","Don't tell anyone how you did that."]) + ' THE PARK GOES WILD!';
+      document.getElementById('share-btn').style.display = navigator.share?'inline-block':'none';
+      show('s-win'); confetti();
+    }, 700);
+    return;
+  }
+  if (outcome==='turnover') {
+    document.getElementById('ball-icon').style.left='-10%';
+    const desc = pick(["You coughed it up. Other team has the ball.","Loose ball. They ran it back."]);
+    document.getElementById('outcome-flavor').textContent=desc;
+    badgeEl.textContent='TURNOVER'; badgeEl.className='yards-badge danger';
+    document.getElementById('slot-box').classList.add('shake');
+    setTimeout(()=>document.getElementById('slot-box').classList.remove('shake'),550);
+    setTimeout(()=>{ document.getElementById('loss-head').textContent='TURNOVER'; document.getElementById('loss-reason').textContent=desc; document.getElementById('loss-nudge').textContent='Different squad. Different result.'; show('s-loss'); },1300);
+    return;
+  }
+  if (outcome==='yards') {
+    if (atOne) { nearMissCount++; badgeEl.textContent='1-YARD LINE — SO CLOSE'; badgeEl.className='yards-badge warning near-miss-flash'; document.getElementById('outcome-flavor').textContent='ONE YARD. You can smell the end zone.'; }
+    else { badgeEl.textContent=`+${yardsMoved} yards · ${yardsToGo} to go`; document.getElementById('outcome-flavor').textContent=pick(["Good chunk play. Keep pushing.","Picked up some real estate.","Moving the chains."]); }
+  } else {
+    document.getElementById('slot-box').classList.add('shake');
+    setTimeout(()=>document.getElementById('slot-box').classList.remove('shake'),550);
+    badgeEl.textContent=`${Math.abs(yardsMoved)} yards lost · ${yardsToGo} to go`; badgeEl.className='yards-badge danger';
+    document.getElementById('outcome-flavor').textContent=pick(["Got dropped in the backfield.","They read the play before you called it.","Stuffed at the line."]);
+  }
+  down++;
+  if (down>4) {
+    setTimeout(()=>{ document.getElementById('loss-head').textContent='STUFFED'; document.getElementById('loss-reason').textContent="Couldn't punch it in on 4 downs."; document.getElementById('loss-nudge').textContent=nearMissCount>=2?'You were right there every time. Different squad?':'Keep experimenting.'; show('s-loss'); },1200);
+  } else {
+    document.getElementById('next-btn').style.display='inline-block';
+  }
+}
+
+function nextPlay() { showPlay(); }
+
+function shareResult() {
+  if (!navigator.share) return;
+  navigator.share({title:'Xylon Park Tuddies',text:`TUDDY!! 🏆\n${lastWinInfo}\n\nCan you find the secret play?`,url:window.location.href}).catch(()=>{});
+}
+
+function confetti() {
+  const wrap = document.getElementById('confetti-wrap');
+  wrap.innerHTML='';
+  const colors=['#FFD700','#ff6b6b','#7ec97e','#87ceeb','#ff69b4','#ffa500','#fff'];
+  for(let i=0;i<100;i++){
+    const p=document.createElement('div'); p.className='confetti-piece';
+    const s=Math.random()*10+6;
+    p.style.cssText=`left:${Math.random()*100}vw;width:${s}px;height:${s*1.4}px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${Math.random()*2+1.5}s;animation-delay:${Math.random()*.7}s;`;
+    wrap.appendChild(p);
+  }
+  setTimeout(()=>wrap.innerHTML='',5000);
+}
+
+function resetGame() { if(spinTimer)clearInterval(spinTimer); startDraft(); }
+show('s-title');
+</script>
+</body>
+</html>
