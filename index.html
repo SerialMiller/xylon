@@ -90,9 +90,12 @@
       width: 100%; max-width: 440px; font-size: 1rem;
       padding: 16px 18px; border-radius: 9px; text-align: left; margin: 4px 0; min-height: 54px;
     }
-    .btn-play:hover { background: var(--gold); color: var(--green-dark); border-color: var(--gold); transform: translate(-2px,-2px); box-shadow: 4px 4px 0 var(--gold-dark); }
+    .btn-play:hover, .btn-play:focus {
+      background: var(--gold); color: var(--green-dark); border-color: var(--gold);
+      transform: translate(-2px,-2px); box-shadow: 4px 4px 0 var(--gold-dark); outline: none;
+    }
     .btn-play-special { border-color: var(--gold) !important; background: rgba(255,215,0,.12) !important; color: var(--gold) !important; }
-    .btn-play-special:hover { background: var(--gold) !important; color: var(--green-dark) !important; }
+    .btn-play-special:hover, .btn-play-special:focus { background: var(--gold) !important; color: var(--green-dark) !important; }
 
     #s-draft { justify-content: flex-start; gap: 18px; }
     .section-title { font-size: 1.7rem; color: var(--gold); text-transform: uppercase; letter-spacing: 3px; text-align: center; }
@@ -138,6 +141,51 @@
 
     .reroll-row { display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .reroll-pips { font-size: 1.1rem; letter-spacing: 3px; }
+
+    /* ═══ KABA ROUTE DIAGRAM OVERLAY ═══════════════════════ */
+    .diag-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.82);
+      z-index: 200;
+      display: none; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .diag-overlay.show { display: flex; animation: diag-in .25s ease; }
+    @keyframes diag-in { from { opacity:0; transform:scale(.94); } to { opacity:1; transform:scale(1); } }
+
+    .diag-card {
+      background: #122a12;
+      border: 3px solid var(--gold);
+      border-radius: 14px; padding: 22px 18px 18px;
+      max-width: 330px; width: 100%; text-align: center;
+      box-shadow: 0 0 40px rgba(255,215,0,.2);
+    }
+    .diag-play-name {
+      font-size: .75rem; letter-spacing: 4px; color: var(--gold);
+      text-transform: uppercase; margin-bottom: 10px;
+    }
+    .diag-field {
+      background: #1a5c1a; border-radius: 8px; padding: 12px 8px;
+      margin-bottom: 14px; position: relative; overflow: hidden;
+      border: 1px solid rgba(255,255,255,.15);
+    }
+    .diag-field::before {
+      content: ''; position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        90deg, transparent 0, transparent calc(25% - 1px),
+        rgba(255,255,255,.1) calc(25% - 1px), rgba(255,255,255,.1) 25%
+      );
+      pointer-events: none;
+    }
+    .diag-art {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: .78rem; color: var(--white); line-height: 1.7;
+      white-space: pre; position: relative; z-index: 1; text-align: center;
+    }
+    .diag-quote {
+      font-family: Arial, sans-serif; font-size: .88rem;
+      color: var(--soft-green); font-style: italic; line-height: 1.45;
+    }
 
     #s-play { justify-content: center; gap: 14px; text-align: center; }
     .down-wrap { display: flex; flex-direction: column; align-items: center; gap: 7px; }
@@ -196,7 +244,7 @@
     .ball-icon {
       position: absolute; top: 50%; transform: translate(-50%,-50%);
       font-size: 1.5rem; transition: left .7s cubic-bezier(.25,.46,.45,.94);
-      z-index: 3; filter: drop-shadow(0 2px 5px rgba(0,0,0,.6));
+      z-index: 3; filter: drop-shadow(0 2px 5px rgba(0,0,0,.6)); will-change: left;
     }
     .field-labels { display: flex; justify-content: space-between; padding: 0 2px; font-size: .56rem; color: rgba(255,255,255,.38); font-family: Arial, sans-serif; }
     .yards-badge { font-size: 1rem; font-family: Arial, sans-serif; color: var(--soft-green); text-align: center; min-height: 1.4em; transition: color .3s; }
@@ -239,6 +287,7 @@
 </head>
 <body>
 
+<!-- PASSWORD -->
 <div id="s-password" class="screen active">
   <div class="title-ball">🔒</div>
   <div class="game-name">Xylon Park<br>Tuddies</div>
@@ -249,6 +298,7 @@
   <div class="pwd-error" id="pwd-error">wrong password, chump.</div>
 </div>
 
+<!-- TITLE -->
 <div id="s-title" class="screen">
   <div class="title-ball">🏈</div>
   <div class="game-name">Xylon Park<br>Tuddies</div>
@@ -256,6 +306,7 @@
   <button class="btn btn-gold" onclick="startDraft()">Take the Field</button>
 </div>
 
+<!-- DRAFT -->
 <div id="s-draft" class="screen">
   <div class="section-title">Draft Your Squad</div>
   <div class="hint" id="draft-hint">Pick 1 of 3 · mystery card picks for you</div>
@@ -271,6 +322,18 @@
   </div>
 </div>
 
+<!-- KABA ROUTE DIAGRAM OVERLAY -->
+<div class="diag-overlay" id="diag-overlay">
+  <div class="diag-card">
+    <div class="diag-play-name" id="diag-play-name">Play Design</div>
+    <div class="diag-field">
+      <pre class="diag-art" id="diag-art"></pre>
+    </div>
+    <div class="diag-quote" id="diag-quote"></div>
+  </div>
+</div>
+
+<!-- PLAY -->
 <div id="s-play" class="screen">
   <div class="down-wrap">
     <div class="down-label-text">Down</div>
@@ -286,6 +349,7 @@
   <div class="play-options" id="play-options"></div>
 </div>
 
+<!-- OUTCOME -->
 <div id="s-outcome" class="screen">
   <div class="play-called" id="play-called"></div>
   <div class="slot-box" id="slot-box">
@@ -303,6 +367,7 @@
   <button class="btn btn-gold" id="next-btn" onclick="nextPlay()" style="display:none">Next Down ▶</button>
 </div>
 
+<!-- WIN -->
 <div id="s-win" class="screen">
   <div class="confetti-wrap" id="confetti-wrap"></div>
   <div style="font-size:3.5rem">🏆</div>
@@ -315,6 +380,7 @@
   </div>
 </div>
 
+<!-- LOSS -->
 <div id="s-loss" class="screen">
   <div style="font-size:3.5rem">💀</div>
   <div class="loss-head" id="loss-head">STUFFED</div>
@@ -324,21 +390,23 @@
 </div>
 
 <script>
+// ─── PASSWORD ────────────────────────────────────────────────────
 const PASSWORD = 'xylonpark';
 
 function checkPassword() {
   sessionStorage.getItem('xpt_auth')==='1' ? show('s-title') : show('s-password');
 }
 function tryPassword() {
-  const val = document.getElementById('pwd-input').value;
-  if (val === PASSWORD) { sessionStorage.setItem('xpt_auth','1'); show('s-title'); }
-  else {
-    document.getElementById('pwd-input').value='';
-    const err=document.getElementById('pwd-error');
-    err.classList.add('show'); setTimeout(()=>err.classList.remove('show'),2500);
+  if (document.getElementById('pwd-input').value === PASSWORD) {
+    sessionStorage.setItem('xpt_auth','1'); show('s-title');
+  } else {
+    document.getElementById('pwd-input').value = '';
+    const err = document.getElementById('pwd-error');
+    err.classList.add('show'); setTimeout(() => err.classList.remove('show'), 2500);
   }
 }
 
+// ─── ROSTER ──────────────────────────────────────────────────────
 const PLAYERS = [
   { name:'Braxner',         emoji:'💪' }, { name:'Kaba',            emoji:'⚡' },
   { name:'Carl',            emoji:'🦁' }, { name:'Mohn',            emoji:'🎯' },
@@ -353,6 +421,7 @@ const PLAYERS = [
   { name:'Sam Gittleman',   emoji:'🎓' },
 ];
 
+// ─── PLAYS ───────────────────────────────────────────────────────
 const ALL_PLAYS = [
   { id:'miller',  name:'Miller Offense',      icon:'📋', mohnOnly:true,  style:'special'      },
   { id:'huck',    name:'Huck It Deep',        icon:'🎯', mohnOnly:false, style:'aggressive'   },
@@ -381,12 +450,76 @@ const STYLE_PROBS = {
   risky:        [.06, .28, .28, .38],
 };
 
+// ─── DEFENSE ─────────────────────────────────────────────────────
 const DEFENSE_ATTRS = [
   'PASS RUSHER','STICKY CB','ZONE HAWK','BLITZER',
   'SHUTDOWN','BALL HAWK','STUNT MASTER','PHYSICAL',
   'COVER 2','SAFETY BLITZ','CAPTAIN','SCREEN BUSTER',
 ];
 
+// ─── KABA ROUTE DIAGRAMS ─────────────────────────────────────────
+const ROUTE_DIAGRAMS = [
+`  ×   ×   ×   ×   ×
+─ ─ ─ ─ ─ ─ ─ ─ ─ ─
+  ●   ●   Q   ●   ●
+  ↑       ↓       ↑
+  ↺  ←←←←+   ●→→→↗`,
+
+`  ×   ×   ×   ×   ×
+─ ─ ─ ─ ─ ─ ─ ─ ─ ─
+  ●   ●   Q   ●   ●
+  ↑   ↑   ↓   ↑   ↑
+          ●
+      ↗       ↖`,
+
+`  ×   ×   ×   ×   ×
+─ ─ ─ ─ ─ ─ ─ ─ ─ ─
+  ●   ●   Q   ●   ●
+  ↗   ↑   ←←←←←←←←
+              ↓
+          ●→→→↗`,
+
+`  ×   ×   ×   ×   ×
+─ ─ ─ ─ ─ ─ ─ ─ ─ ─
+  ●   ●   Q   ●   ●
+  ↑       ↓       ↗
+  ↑       ●   ↗
+  ↺   ↙`,
+
+`  ×   ×   ×   ×   ×
+─ ─ ─ ─ ─ ─ ─ ─ ─ ─
+  ●   Q←← ●   ●   ●
+  ↗   ↓       ↖
+      ●→→→→→→→→→↗`,
+
+`  ×   ×   ×   ×   ×
+─ ─ ─ ─ ─ ─ ─ ─ ─ ─
+  ●   ●   Q   ●   ●
+      ↗↗  ↓  ↖↖
+  ↑           ↑
+  ●           ●`,
+];
+
+// First two quotes at 80% combined weight
+const KABA_QUOTES = [
+  "Kaba couldn't have convoluted the routes any better.",
+  "Kaba sign language hits different.",
+  "Nobody knows what this means. That's the point.",
+  "Three circles, one lightning bolt, pure chaos.",
+  "Kaba called an audible nobody asked for.",
+  "The routes made sense to exactly one person.",
+  "You could feel Kaba's creative energy from across the park.",
+  "The defense is confused. So is the offense.",
+];
+
+function pickKabaQuote() {
+  const r = Math.random();
+  if (r < .40) return KABA_QUOTES[0];
+  if (r < .80) return KABA_QUOTES[1];
+  return KABA_QUOTES[Math.floor(Math.random() * (KABA_QUOTES.length - 2)) + 2];
+}
+
+// ─── FLAVOR TEXT ─────────────────────────────────────────────────
 const FLAVOR = {
   td_mohn:  ["Mohn finds a hole — somehow, always finds a hole.","The Miller offense. You either run it or you don't score.","Everyone knew the play. Nobody could stop it.","That's the thing about the Miller — you can't scheme around a law of nature."],
   td_lucky: ["No way. No way that worked.","One in a million. Truly unhinged.","Don't tell anyone how you did that.","The park will never believe this."],
@@ -398,8 +531,8 @@ const FLAVOR = {
 
 const SPIN_POOL = ['🏈','💨','🌀','⚡','🔥','💥','🎯','⭐','😤','🦅','💯','🎲'];
 const FIELD_MAX=42, START_YTG=28, SCORE_RANGE=6;
-const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
-const randInt=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const randInt = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
 
 let selected=[],defense=[],down=1,yardsToGo=START_YTG,nearMissCount=0,lastWinInfo='',spinTimer=null;
 let draftCards=[],rerollsLeft=2,draftAnimating=false;
@@ -419,6 +552,7 @@ function showToast(msg) {
   setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),500);},2500);
 }
 
+// ─── DRAFT ───────────────────────────────────────────────────────
 function startDraft() {
   selected=[]; defense=[]; down=1; yardsToGo=START_YTG;
   nearMissCount=0; rerollsLeft=2; draftAnimating=false;
@@ -446,12 +580,10 @@ function renderDraftSlots() {
 }
 
 function renderCards() {
-  const c=document.getElementById('draft-cards');
-  c.innerHTML='';
+  const c=document.getElementById('draft-cards'); c.innerHTML='';
   draftCards.forEach((card,pos)=>{
     const el=document.createElement('div');
-    el.className='dcard'+(card.isMystery?' mystery':'');
-    el.id=`dc-${pos}`;
+    el.className='dcard'+(card.isMystery?' mystery':''); el.id=`dc-${pos}`;
     if(card.isMystery){
       el.innerHTML=`<div class="dcard-emoji">🎲</div><div class="dcard-name">LUCKY<br>ROLL</div><div class="dcard-action">spin</div>`;
     } else {
@@ -462,7 +594,7 @@ function renderCards() {
     c.appendChild(el);
   });
   document.getElementById('reroll-btn').disabled=rerollsLeft<=0;
-  document.getElementById('reroll-pips').textContent='⭕'.repeat(rerollsLeft)+('⬛'.repeat(2-rerollsLeft));
+  document.getElementById('reroll-pips').textContent='⭕'.repeat(rerollsLeft)+'⬛'.repeat(2-rerollsLeft);
 }
 
 function pickCard(pos) {
@@ -501,13 +633,14 @@ function commitDraft(playerIdx) {
   else{dealCards();renderDraftSlots();renderCards();}
 }
 
-function doReroll() {
+function doReroll(){
   if(rerollsLeft<=0||draftAnimating)return;
   rerollsLeft--;
   dealCards();renderCards();
   document.getElementById('reroll-btn').disabled=rerollsLeft<=0;
 }
 
+// ─── DEFENSE ─────────────────────────────────────────────────────
 function generateDefense() {
   const pool=PLAYERS.map((_,i)=>i).filter(i=>!selected.includes(i));
   defense=[...pool].sort(()=>Math.random()-.5).slice(0,3).map(idx=>({
@@ -516,19 +649,31 @@ function generateDefense() {
   }));
 }
 
-const hasMohn=()=>selected.some(i=>PLAYERS[i].name==='Mohn');
+// ─── KABA DIAGRAM ────────────────────────────────────────────────
+function showKabaDiagram(playName, callback) {
+  document.getElementById('diag-play-name').textContent = playName;
+  document.getElementById('diag-art').textContent  = pick(ROUTE_DIAGRAMS);
+  document.getElementById('diag-quote').textContent = pickKabaQuote();
+  document.getElementById('diag-overlay').classList.add('show');
+  setTimeout(() => {
+    document.getElementById('diag-overlay').classList.remove('show');
+    setTimeout(callback, 220);
+  }, 2500);
+}
+
+// ─── PLAY SCREEN ─────────────────────────────────────────────────
+const hasMohn = () => selected.some(i => PLAYERS[i].name === 'Mohn');
 
 function getPlayOptions() {
-  const nonSpecial=ALL_PLAYS.filter(p=>!p.mohnOnly);
-  const shuffled=[...nonSpecial].sort(()=>Math.random()-.5);
-  const picks=shuffled.slice(0,hasMohn()?2:3);
-  if(hasMohn())picks.unshift(ALL_PLAYS.find(p=>p.id==='miller'));
+  const nonSpecial = ALL_PLAYS.filter(p => !p.mohnOnly);
+  const shuffled   = [...nonSpecial].sort(() => Math.random()-.5);
+  const picks      = shuffled.slice(0, hasMohn() ? 2 : 3);
+  if (hasMohn()) picks.unshift(ALL_PLAYS.find(p => p.id === 'miller'));
   return picks;
 }
 
 function showPlay() {
-  const dots=document.getElementById('down-dots');
-  dots.innerHTML='';
+  const dots=document.getElementById('down-dots'); dots.innerHTML='';
   for(let d=1;d<=4;d++){
     const dot=document.createElement('div');
     dot.className='dot'+(d<down?' used':d===down?' active':'');
@@ -546,6 +691,7 @@ function showPlay() {
   show('s-play');
 }
 
+// ─── PLAY EXECUTION ──────────────────────────────────────────────
 const OUTCOME_META={
   td:      {emoji:'🏆',label:'TOUCHDOWN!!!',border:'#FFD700'},
   yards:   {emoji:'📏',label:'GOT YARDS',border:'#7ec97e'},
@@ -554,19 +700,27 @@ const OUTCOME_META={
 };
 
 function callPlay(playId) {
-  const play=ALL_PLAYS.find(p=>p.id===playId);
-  const style=(playId==='miller'&&hasMohn())?'special':play.style;
-  const [td,yr,sk]=STYLE_PROBS[style];
-  const r=Math.random();
-  const raw=r<td?'td_attempt':r<td+yr?'yards':r<td+yr+sk?'sack':'turnover';
-  const outcome=(raw==='td_attempt'&&yardsToGo<=SCORE_RANGE)?'td':raw==='td_attempt'?'yards':raw;
+  const play = ALL_PLAYS.find(p=>p.id===playId);
+  if (playId === 'miller') {
+    executePlay(playId, play);
+  } else {
+    showKabaDiagram(play.name, () => executePlay(playId, play));
+  }
+}
+
+function executePlay(playId, play) {
+  const style = (playId==='miller'&&hasMohn()) ? 'special' : play.style;
+  const [td,yr,sk] = STYLE_PROBS[style];
+  const r = Math.random();
+  const raw = r<td?'td_attempt':r<td+yr?'yards':r<td+yr+sk?'sack':'turnover';
+  const isMM = playId==='miller'&&hasMohn();
+  const outcome = (raw==='td_attempt'&&yardsToGo<=SCORE_RANGE)?'td':raw==='td_attempt'?'yards':raw;
 
   let newYtg=yardsToGo,yardsMoved=0,atOne=false;
   if(outcome==='td')newYtg=0;
   else if(outcome==='yards'){
     const gain=randInt(10,18);
     newYtg=yardsToGo-gain;
-    const isMM=playId==='miller'&&hasMohn();
     if(!isMM&&newYtg<1){newYtg=1;atOne=true;}
     newYtg=Math.max(newYtg,0);
     yardsMoved=yardsToGo-newYtg;
@@ -598,12 +752,11 @@ function callPlay(playId) {
     document.getElementById('slot-emoji').textContent=meta.emoji;
     document.getElementById('slot-label').textContent=meta.label;
     document.getElementById('slot-box').style.borderColor=meta.border;
-    setTimeout(()=>{yardsToGo=newYtg;ball.style.left=ballPct(newYtg)+'%';resolveOutcome(outcome,playId,yardsMoved,atOne);},350);
+    setTimeout(()=>{yardsToGo=newYtg;ball.style.left=ballPct(newYtg)+'%';resolveOutcome(outcome,isMM,yardsMoved,atOne);},350);
   },1400);
 }
 
-function resolveOutcome(outcome,playId,yardsMoved,atOne) {
-  const isMM=playId==='miller'&&hasMohn();
+function resolveOutcome(outcome,isMM,yardsMoved,atOne){
   const badgeEl=document.getElementById('yards-badge');
   if(outcome==='td'){
     document.getElementById('ball-icon').style.left='102%';
@@ -638,7 +791,12 @@ function resolveOutcome(outcome,playId,yardsMoved,atOne) {
   }
   down++;
   if(down>4){
-    setTimeout(()=>{document.getElementById('loss-head').textContent='STUFFED';document.getElementById('loss-reason').textContent="Couldn't punch it in on 4 downs.";document.getElementById('loss-nudge').textContent=nearMissCount>=2?'You were right there. Different squad?':'Keep experimenting.';show('s-loss');},1200);
+    setTimeout(()=>{
+      document.getElementById('loss-head').textContent='STUFFED';
+      document.getElementById('loss-reason').textContent="Couldn't punch it in on 4 downs.";
+      document.getElementById('loss-nudge').textContent=nearMissCount>=2?'You were right there every time. Different squad?':'Keep experimenting.';
+      show('s-loss');
+    },1200);
   } else {
     document.getElementById('next-btn').style.display='inline-block';
   }
@@ -652,8 +810,7 @@ function shareResult(){
 }
 
 function confetti(){
-  const wrap=document.getElementById('confetti-wrap');
-  wrap.innerHTML='';
+  const wrap=document.getElementById('confetti-wrap'); wrap.innerHTML='';
   const colors=['#FFD700','#ff6b6b','#7ec97e','#87ceeb','#ff69b4','#ffa500','#fff'];
   for(let i=0;i<100;i++){
     const p=document.createElement('div');p.className='confetti-piece';
