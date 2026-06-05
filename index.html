@@ -280,10 +280,12 @@
       position: fixed; top: 24px; left: 50%;
       transform: translateX(-50%) translateY(-90px);
       background: var(--red); color: white;
-      padding: 13px 30px; border-radius: 9px;
-      font-size: 1.3rem; letter-spacing: 3px;
+      padding: 13px 24px; border-radius: 9px;
+      font-size: 1.1rem; letter-spacing: 1px;
       z-index: 9999; transition: transform .38s cubic-bezier(.34,1.56,.64,1);
-      box-shadow: 0 6px 24px rgba(0,0,0,.6); pointer-events: none; white-space: nowrap;
+      box-shadow: 0 6px 24px rgba(0,0,0,.6); pointer-events: none;
+      max-width: min(360px, 90vw); text-align: center; line-height: 1.4;
+      font-family: Arial, sans-serif; font-style: italic;
     }
     .toast.show { transform: translateX(-50%) translateY(0); }
   </style>
@@ -667,7 +669,9 @@ function spinMystery(pos) {
 
 function commitDraft(playerIdx) {
   selected.push(playerIdx);
-  if(PLAYERS[playerIdx].name==='Carter Sweatt')showToast('⚠️  uh oh!');
+  const name = PLAYERS[playerIdx].name;
+  if (name === 'Carter Sweatt') showToast('⚠️  uh oh!');
+  else if (PLAYER_QUOTES[name]) showToast(PLAYER_QUOTES[name]);
   if(selected.length>=3){generateDefense();setTimeout(showPlay,380);}
   else{dealCards();renderDraftSlots();renderCards();}
 }
