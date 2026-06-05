@@ -44,7 +44,8 @@
     }
     .screen.active { display: flex; }
 
-    #s-title { justify-content: center; gap: 24px; text-align: center; }
+    #s-password, #s-title { justify-content: center; gap: 24px; text-align: center; }
+
     .title-ball { font-size: 4.5rem; animation: bob 1.3s ease-in-out infinite alternate; }
     @keyframes bob {
       from { transform: translateY(0) rotate(-6deg); }
@@ -58,17 +59,31 @@
     }
     .game-sub { font-size: .9rem; letter-spacing: 4px; color: var(--soft-green); text-transform: uppercase; font-family: Arial, sans-serif; }
 
+    .pwd-input {
+      background: rgba(255,255,255,.1); border: 2px solid rgba(255,255,255,.3); border-radius: 8px;
+      color: var(--white); font-size: 1.3rem; padding: 14px 20px; text-align: center;
+      width: 100%; max-width: 280px; letter-spacing: 6px; outline: none;
+      font-family: Arial, sans-serif; -webkit-appearance: none;
+    }
+    .pwd-input:focus { border-color: var(--gold); }
+    .pwd-input::placeholder { letter-spacing: 2px; font-size: 1rem; }
+    .pwd-error { font-family: Arial, sans-serif; color: var(--red); font-size: .9rem; opacity: 0; transition: opacity .3s; }
+    .pwd-error.show { opacity: 1; }
+
     .btn {
       font-family: 'Impact', 'Arial Black', sans-serif;
       font-size: 1.2rem; padding: 15px 36px; border: none; cursor: pointer;
       text-transform: uppercase; letter-spacing: 2px; border-radius: 5px;
-      transition: transform .1s, box-shadow .1s; -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation; min-height: 52px;
+      transition: transform .1s, box-shadow .1s, background .1s;
+      -webkit-tap-highlight-color: transparent; touch-action: manipulation; min-height: 52px;
     }
     .btn:active { transform: scale(.94) !important; box-shadow: none !important; }
     .btn-gold { background: var(--gold); color: var(--green-dark); box-shadow: 4px 4px 0 var(--gold-dark); }
     .btn-gold:hover { background: #ffe840; transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--gold-dark); }
+    .btn-gold:disabled { opacity: .35; cursor: not-allowed; transform: none !important; box-shadow: 4px 4px 0 var(--gold-dark) !important; }
     .btn-ghost { background: transparent; color: var(--soft-green); border: 2px solid rgba(126,201,126,.4); font-size: 1rem; padding: 12px 28px; min-height: 48px; letter-spacing: 1px; }
+    .btn-ghost:hover { border-color: var(--soft-green); color: var(--white); }
+    .btn-ghost:disabled { opacity: .3; cursor: not-allowed; }
     .btn-play {
       background: rgba(255,255,255,.09); color: var(--white);
       border: 2px solid rgba(255,255,255,.22);
@@ -79,7 +94,7 @@
     .btn-play-special { border-color: var(--gold) !important; background: rgba(255,215,0,.12) !important; color: var(--gold) !important; }
     .btn-play-special:hover { background: var(--gold) !important; color: var(--green-dark) !important; }
 
-    #s-draft { justify-content: flex-start; gap: 20px; }
+    #s-draft { justify-content: flex-start; gap: 18px; }
     .section-title { font-size: 1.7rem; color: var(--gold); text-transform: uppercase; letter-spacing: 3px; text-align: center; }
     .hint { font-family: Arial, sans-serif; font-size: .85rem; color: var(--soft-green); text-align: center; }
     .draft-progress { display: flex; gap: 14px; justify-content: center; }
@@ -91,19 +106,38 @@
     }
     .draft-slot.active { border-color: var(--gold); box-shadow: 0 0 14px rgba(255,215,0,.45); }
     .draft-slot.filled { border-color: var(--soft-green); background: rgba(126,201,126,.15); }
-    .player-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 420px; }
-    .pcard {
+
+    .draft-cards { display: flex; gap: 10px; justify-content: center; width: 100%; max-width: 480px; }
+    .dcard {
+      flex: 1; min-width: 0;
       background: rgba(255,255,255,.09); border: 2px solid rgba(255,255,255,.22);
-      border-radius: 10px; padding: 12px 6px 10px; text-align: center; cursor: pointer;
+      border-radius: 12px; padding: 16px 6px 12px; text-align: center; cursor: pointer;
       -webkit-tap-highlight-color: transparent; touch-action: manipulation;
-      transition: background .12s, transform .12s, border-color .12s;
-      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      transition: background .15s, transform .15s, border-color .15s;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 7px; min-height: 140px; justify-content: center;
     }
-    .pcard:active { transform: scale(.9); }
-    .pcard:hover { background: rgba(255,255,255,.17); transform: translateY(-2px); }
-    .pcard.selected { border-color: var(--soft-green); background: rgba(126,201,126,.15); pointer-events: none; }
-    .pcard-emoji { font-size: 2rem; }
-    .pcard-name  { font-size: .62rem; font-family: 'Arial Black', Arial, sans-serif; text-transform: uppercase; line-height: 1.2; }
+    .dcard:active:not(.no-interact) { transform: scale(.9); }
+    .dcard:hover:not(.no-interact) { background: rgba(255,255,255,.17); transform: translateY(-2px); }
+    .dcard.mystery { border-color: var(--gold); background: rgba(255,215,0,.1); animation: mystery-glow 1.6s ease-in-out infinite alternate; }
+    @keyframes mystery-glow {
+      from { box-shadow: 0 0 6px rgba(255,215,0,.3); }
+      to   { box-shadow: 0 0 22px rgba(255,215,0,.75), inset 0 0 8px rgba(255,215,0,.1); }
+    }
+    .dcard.spinning { pointer-events: none; border-color: var(--gold); animation: none; }
+    .dcard.revealed { border-color: var(--soft-green); background: rgba(126,201,126,.15); pointer-events: none; }
+    .dcard.no-interact { pointer-events: none; opacity: .5; }
+    .dcard-emoji { font-size: 2.4rem; line-height: 1; }
+    .dcard.mystery .dcard-emoji { animation: mystery-bob .9s ease-in-out infinite alternate; }
+    @keyframes mystery-bob { from { transform: scale(1) rotate(-8deg); } to { transform: scale(1.15) rotate(8deg); } }
+    .dcard.spinning .dcard-emoji { animation: none; }
+    .dcard-name { font-size: .65rem; font-family: 'Arial Black', Arial, sans-serif; text-transform: uppercase; line-height: 1.25; color: var(--white); }
+    .dcard.mystery .dcard-name { color: var(--gold); font-size: .7rem; }
+    .dcard-action { font-size: .6rem; color: var(--soft-green); letter-spacing: 2px; text-transform: uppercase; font-family: Arial, sans-serif; }
+    .dcard.mystery .dcard-action { color: var(--gold); }
+
+    .reroll-row { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .reroll-pips { font-size: 1.1rem; letter-spacing: 3px; }
 
     #s-play { justify-content: center; gap: 14px; text-align: center; }
     .down-wrap { display: flex; flex-direction: column; align-items: center; gap: 7px; }
@@ -118,6 +152,12 @@
     .squad-label { font-size: .7rem; letter-spacing: 3px; color: var(--soft-green); text-transform: uppercase; font-family: Arial, sans-serif; }
     .team-row { display: flex; gap: 7px; justify-content: center; flex-wrap: wrap; }
     .chip { background: var(--gold-dim); border: 2px solid rgba(255,215,0,.5); border-radius: 6px; padding: 6px 12px; font-size: .78rem; color: var(--gold); font-family: 'Arial Black', Arial, sans-serif; text-transform: uppercase; }
+    .def-label { font-size: .68rem; letter-spacing: 3px; color: #ff7070; text-transform: uppercase; font-family: Arial, sans-serif; }
+    .def-row { display: flex; gap: 7px; justify-content: center; flex-wrap: wrap; }
+    .def-chip { background: rgba(224,48,48,.12); border: 2px solid rgba(224,48,48,.35); border-radius: 6px; padding: 6px 10px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .def-chip-emoji { font-size: 1.1rem; }
+    .def-chip-name { font-size: .6rem; font-family: 'Arial Black', Arial, sans-serif; text-transform: uppercase; color: #ff9999; }
+    .def-chip-attr { font-size: .55rem; letter-spacing: 1px; color: #ff6666; text-transform: uppercase; font-family: Arial, sans-serif; }
     .plays-header { font-size: .7rem; letter-spacing: 3px; color: rgba(255,255,255,.4); text-transform: uppercase; font-family: Arial, sans-serif; }
     .play-options { display: flex; flex-direction: column; align-items: center; width: 100%; }
 
@@ -184,11 +224,32 @@
 
     @keyframes shake-h { 0%,100% { transform: translateX(0); } 15%,55% { transform: translateX(-8px); } 35%,75% { transform: translateX(8px); } }
     .shake { animation: shake-h .5s ease; }
+
+    .toast {
+      position: fixed; top: 24px; left: 50%;
+      transform: translateX(-50%) translateY(-90px);
+      background: var(--red); color: white;
+      padding: 13px 30px; border-radius: 9px;
+      font-size: 1.3rem; letter-spacing: 3px;
+      z-index: 9999; transition: transform .38s cubic-bezier(.34,1.56,.64,1);
+      box-shadow: 0 6px 24px rgba(0,0,0,.6); pointer-events: none; white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
 
-<div id="s-title" class="screen active">
+<div id="s-password" class="screen active">
+  <div class="title-ball">🔒</div>
+  <div class="game-name">Xylon Park<br>Tuddies</div>
+  <div class="game-sub">Friends only.</div>
+  <input type="password" id="pwd-input" class="pwd-input" placeholder="password"
+    onkeydown="if(event.key==='Enter')tryPassword()" autocomplete="off" />
+  <button class="btn btn-gold" onclick="tryPassword()">Enter</button>
+  <div class="pwd-error" id="pwd-error">wrong password, chump.</div>
+</div>
+
+<div id="s-title" class="screen">
   <div class="title-ball">🏈</div>
   <div class="game-name">Xylon Park<br>Tuddies</div>
   <div class="game-sub">Est. The Park · 4th &amp; Goal</div>
@@ -197,13 +258,17 @@
 
 <div id="s-draft" class="screen">
   <div class="section-title">Draft Your Squad</div>
-  <div class="hint">Pick 3 players to take the field</div>
+  <div class="hint" id="draft-hint">Pick 1 of 3 · mystery card picks for you</div>
   <div class="draft-progress">
     <div class="draft-slot active" id="ds-0">?</div>
-    <div class="draft-slot"       id="ds-1">?</div>
-    <div class="draft-slot"       id="ds-2">?</div>
+    <div class="draft-slot"        id="ds-1">?</div>
+    <div class="draft-slot"        id="ds-2">?</div>
   </div>
-  <div class="player-grid" id="player-grid"></div>
+  <div class="draft-cards" id="draft-cards"></div>
+  <div class="reroll-row">
+    <button class="btn btn-ghost" id="reroll-btn" onclick="doReroll()">↺ Re-roll</button>
+    <div class="reroll-pips" id="reroll-pips">⭕⭕</div>
+  </div>
 </div>
 
 <div id="s-play" class="screen">
@@ -215,6 +280,8 @@
   <div class="yards-remaining"><strong id="ytg-num">—</strong> yards to go</div>
   <div class="squad-label">Your Squad</div>
   <div class="team-row" id="team-row"></div>
+  <div class="def-label">⬛ their defense</div>
+  <div class="def-row" id="def-row"></div>
   <div class="plays-header">Call the Play</div>
   <div class="play-options" id="play-options"></div>
 </div>
@@ -257,6 +324,21 @@
 </div>
 
 <script>
+const PASSWORD = 'xylonpark';
+
+function checkPassword() {
+  sessionStorage.getItem('xpt_auth')==='1' ? show('s-title') : show('s-password');
+}
+function tryPassword() {
+  const val = document.getElementById('pwd-input').value;
+  if (val === PASSWORD) { sessionStorage.setItem('xpt_auth','1'); show('s-title'); }
+  else {
+    document.getElementById('pwd-input').value='';
+    const err=document.getElementById('pwd-error');
+    err.classList.add('show'); setTimeout(()=>err.classList.remove('show'),2500);
+  }
+}
+
 const PLAYERS = [
   { name:'Braxner',         emoji:'💪' }, { name:'Kaba',            emoji:'⚡' },
   { name:'Carl',            emoji:'🦁' }, { name:'Mohn',            emoji:'🎯' },
@@ -271,198 +353,310 @@ const PLAYERS = [
   { name:'Sam Gittleman',   emoji:'🎓' },
 ];
 
-const PLAYS = [
-  { id:'huck',   name:'Huck It Deep',        icon:'🎯', style:'aggressive' },
-  { id:'kaba',   name:'Elaborate Kaba Play', icon:'✨', style:'kaba'       },
-  { id:'miller', name:'Miller Offense',      icon:'📋', style:'special',   mohnOnly:true },
+const ALL_PLAYS = [
+  { id:'miller',  name:'Miller Offense',      icon:'📋', mohnOnly:true,  style:'special'      },
+  { id:'huck',    name:'Huck It Deep',        icon:'🎯', mohnOnly:false, style:'aggressive'   },
+  { id:'kaba',    name:'Elaborate Kaba Play', icon:'✨', mohnOnly:false, style:'kaba'         },
+  { id:'screen',  name:'Screen Pass',         icon:'🔄', mohnOnly:false, style:'conservative' },
+  { id:'draw',    name:'Draw Play',           icon:'💨', mohnOnly:false, style:'balanced'     },
+  { id:'sneak',   name:'QB Sneak',            icon:'🏃', mohnOnly:false, style:'conservative' },
+  { id:'rollout', name:'Rollout Right',       icon:'↪️', mohnOnly:false, style:'balanced'     },
+  { id:'flea',    name:'Flea Flicker',        icon:'🌀', mohnOnly:false, style:'risky'        },
+  { id:'verts',   name:'Four Verts',          icon:'🚀', mohnOnly:false, style:'aggressive'   },
+  { id:'toss',    name:'Outside Toss',        icon:'🏈', mohnOnly:false, style:'balanced'     },
+  { id:'reverse', name:'Double Reverse',      icon:'🔁', mohnOnly:false, style:'risky'        },
+  { id:'bootleg', name:'Naked Bootleg',       icon:'😤', mohnOnly:false, style:'balanced'     },
+  { id:'hook',    name:'Hook & Lateral',      icon:'💡', mohnOnly:false, style:'aggressive'   },
+  { id:'wildcat', name:'Wildcat Formation',   icon:'🐱', mohnOnly:false, style:'conservative' },
+  { id:'statue',  name:'Statue of Liberty',   icon:'🗽', mohnOnly:false, style:'risky'        },
+  { id:'sprint',  name:'Sprint Out Right',    icon:'⚡', mohnOnly:false, style:'balanced'     },
 ];
 
 const STYLE_PROBS = {
-  special:    [.35, .35, .22, .08],
-  aggressive: [.04, .40, .30, .26],
-  kaba:       [.05, .50, .28, .17],
+  special:      [.35, .35, .22, .08],
+  aggressive:   [.04, .40, .30, .26],
+  kaba:         [.05, .50, .28, .17],
+  conservative: [.02, .52, .34, .12],
+  balanced:     [.03, .45, .33, .19],
+  risky:        [.06, .28, .28, .38],
+};
+
+const DEFENSE_ATTRS = [
+  'PASS RUSHER','STICKY CB','ZONE HAWK','BLITZER',
+  'SHUTDOWN','BALL HAWK','STUNT MASTER','PHYSICAL',
+  'COVER 2','SAFETY BLITZ','CAPTAIN','SCREEN BUSTER',
+];
+
+const FLAVOR = {
+  td_mohn:  ["Mohn finds a hole — somehow, always finds a hole.","The Miller offense. You either run it or you don't score.","Everyone knew the play. Nobody could stop it.","That's the thing about the Miller — you can't scheme around a law of nature."],
+  td_lucky: ["No way. No way that worked.","One in a million. Truly unhinged.","Don't tell anyone how you did that.","The park will never believe this."],
+  yards:    ["Good chunk play. Keep pushing.","Picked up some real estate.","Moving the chains.","Nice gain. You're in business."],
+  sack:     ["Got dropped in the backfield.","They read the play before you called it.","Negative yards. It happens.","Stuffed at the line."],
+  one_yard: ["ONE YARD. You can smell the end zone.","Goal line stand. Something's not clicking.","Right there. Every time. Stopped at the 1.","So close it physically hurts."],
+  to_desc:  ["You coughed it up. Other team has the ball.","Loose ball. They ran it back.","Fumble. It's over."],
 };
 
 const SPIN_POOL = ['🏈','💨','🌀','⚡','🔥','💥','🎯','⭐','😤','🦅','💯','🎲'];
-const FIELD_MAX = 42, START_YTG = 28, SCORE_RANGE = 6;
-const pick = arr => arr[Math.floor(Math.random()*arr.length)];
-const randInt = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const FIELD_MAX=42, START_YTG=28, SCORE_RANGE=6;
+const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+const randInt=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 
-let selected = [], down = 1, yardsToGo = START_YTG, nearMissCount = 0, lastWinInfo = '', spinTimer = null;
+let selected=[],defense=[],down=1,yardsToGo=START_YTG,nearMissCount=0,lastWinInfo='',spinTimer=null;
+let draftCards=[],rerollsLeft=2,draftAnimating=false;
 
 function show(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
 }
 
+function showToast(msg) {
+  let t=document.getElementById('g-toast');
+  if(t)t.remove();
+  t=document.createElement('div'); t.id='g-toast'; t.className='toast'; t.textContent=msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('show')));
+  setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),500);},2500);
+}
+
 function startDraft() {
-  selected = []; down = 1; yardsToGo = START_YTG; nearMissCount = 0;
-  renderGrid(); renderSlots(); show('s-draft');
+  selected=[]; defense=[]; down=1; yardsToGo=START_YTG;
+  nearMissCount=0; rerollsLeft=2; draftAnimating=false;
+  dealCards(); renderDraftSlots(); renderCards(); show('s-draft');
 }
 
-function renderGrid() {
-  const g = document.getElementById('player-grid');
-  g.innerHTML = '';
-  PLAYERS.forEach((p, i) => {
-    const el = document.createElement('div');
-    el.className = 'pcard' + (selected.includes(i) ? ' selected' : '');
-    el.innerHTML = `<div class="pcard-emoji">${p.emoji}</div><div class="pcard-name">${p.name}</div>`;
-    el.addEventListener('click', () => pickPlayer(i));
-    g.appendChild(el);
-  });
+function dealCards() {
+  const pool=PLAYERS.map((_,i)=>i).filter(i=>!selected.includes(i));
+  const shuffled=[...pool].sort(()=>Math.random()-.5).slice(0,3);
+  const mp=Math.floor(Math.random()*3);
+  draftCards=shuffled.map((idx,pos)=>({playerIdx:idx,isMystery:pos===mp}));
 }
 
-function renderSlots() {
-  for (let i=0;i<3;i++) {
-    const el = document.getElementById(`ds-${i}`);
-    el.className = 'draft-slot';
-    if (i < selected.length) { el.textContent = PLAYERS[selected[i]].emoji; el.classList.add('filled'); }
-    else if (i === selected.length) { el.textContent = '?'; el.classList.add('active'); }
-    else el.textContent = '?';
+function renderDraftSlots() {
+  for(let i=0;i<3;i++){
+    const el=document.getElementById(`ds-${i}`);
+    el.className='draft-slot';
+    if(i<selected.length){el.textContent=PLAYERS[selected[i]].emoji;el.classList.add('filled');}
+    else if(i===selected.length){el.textContent='?';el.classList.add('active');}
+    else el.textContent='?';
   }
+  const n=selected.length;
+  document.getElementById('draft-hint').textContent=
+    n===0?'Pick 1 of 3 · mystery card picks for you':n===1?'Pick your 2nd player':'Last pick — choose wisely';
 }
 
-function pickPlayer(i) {
-  if (selected.includes(i) || selected.length >= 3) return;
-  selected.push(i);
-  renderGrid(); renderSlots();
-  if (selected.length >= 3) setTimeout(showPlay, 350);
+function renderCards() {
+  const c=document.getElementById('draft-cards');
+  c.innerHTML='';
+  draftCards.forEach((card,pos)=>{
+    const el=document.createElement('div');
+    el.className='dcard'+(card.isMystery?' mystery':'');
+    el.id=`dc-${pos}`;
+    if(card.isMystery){
+      el.innerHTML=`<div class="dcard-emoji">🎲</div><div class="dcard-name">LUCKY<br>ROLL</div><div class="dcard-action">spin</div>`;
+    } else {
+      const p=PLAYERS[card.playerIdx];
+      el.innerHTML=`<div class="dcard-emoji">${p.emoji}</div><div class="dcard-name">${p.name}</div><div class="dcard-action">draft</div>`;
+    }
+    el.addEventListener('click',()=>{if(!draftAnimating)pickCard(pos);});
+    c.appendChild(el);
+  });
+  document.getElementById('reroll-btn').disabled=rerollsLeft<=0;
+  document.getElementById('reroll-pips').textContent='⭕'.repeat(rerollsLeft)+('⬛'.repeat(2-rerollsLeft));
 }
 
-const hasMohn = () => selected.some(i => PLAYERS[i].name === 'Mohn');
+function pickCard(pos) {
+  const card=draftCards[pos];
+  if(!card)return;
+  card.isMystery?spinMystery(pos):commitDraft(card.playerIdx);
+}
+
+function spinMystery(pos) {
+  draftAnimating=true;
+  document.querySelectorAll('.dcard').forEach(c=>c.classList.add('no-interact'));
+  document.getElementById('reroll-btn').disabled=true;
+  const pool=PLAYERS.map((_,i)=>i).filter(i=>!selected.includes(i));
+  const randomIdx=pool[Math.floor(Math.random()*pool.length)];
+  const cardEl=document.getElementById(`dc-${pos}`);
+  const emojiEl=cardEl.querySelector('.dcard-emoji');
+  const nameEl=cardEl.querySelector('.dcard-name');
+  const actEl=cardEl.querySelector('.dcard-action');
+  cardEl.classList.remove('mystery'); cardEl.classList.add('spinning');
+  actEl.textContent='...';
+  let tick=0;
+  const t=setInterval(()=>{emojiEl.textContent=SPIN_POOL[tick++%SPIN_POOL.length];},75);
+  setTimeout(()=>{
+    clearInterval(t);
+    const player=PLAYERS[randomIdx];
+    emojiEl.textContent=player.emoji; nameEl.innerHTML=player.name; actEl.textContent='drafted!';
+    cardEl.classList.remove('spinning'); cardEl.classList.add('revealed');
+    setTimeout(()=>{draftAnimating=false;commitDraft(randomIdx);},650);
+  },1100);
+}
+
+function commitDraft(playerIdx) {
+  selected.push(playerIdx);
+  if(PLAYERS[playerIdx].name==='Carter Sweatt')showToast('⚠️  uh oh!');
+  if(selected.length>=3){generateDefense();setTimeout(showPlay,380);}
+  else{dealCards();renderDraftSlots();renderCards();}
+}
+
+function doReroll() {
+  if(rerollsLeft<=0||draftAnimating)return;
+  rerollsLeft--;
+  dealCards();renderCards();
+  document.getElementById('reroll-btn').disabled=rerollsLeft<=0;
+}
+
+function generateDefense() {
+  const pool=PLAYERS.map((_,i)=>i).filter(i=>!selected.includes(i));
+  defense=[...pool].sort(()=>Math.random()-.5).slice(0,3).map(idx=>({
+    player:PLAYERS[idx],
+    attr:DEFENSE_ATTRS[Math.floor(Math.random()*DEFENSE_ATTRS.length)],
+  }));
+}
+
+const hasMohn=()=>selected.some(i=>PLAYERS[i].name==='Mohn');
 
 function getPlayOptions() {
-  const opts = PLAYS.filter(p => !p.mohnOnly);
-  if (hasMohn()) opts.push(PLAYS.find(p => p.id === 'miller'));
-  return opts;
+  const nonSpecial=ALL_PLAYS.filter(p=>!p.mohnOnly);
+  const shuffled=[...nonSpecial].sort(()=>Math.random()-.5);
+  const picks=shuffled.slice(0,hasMohn()?2:3);
+  if(hasMohn())picks.unshift(ALL_PLAYS.find(p=>p.id==='miller'));
+  return picks;
 }
 
 function showPlay() {
-  const dots = document.getElementById('down-dots');
-  dots.innerHTML = '';
-  for (let d=1;d<=4;d++) {
-    const dot = document.createElement('div');
-    dot.className = 'dot'+(d<down?' used':d===down?' active':'');
+  const dots=document.getElementById('down-dots');
+  dots.innerHTML='';
+  for(let d=1;d<=4;d++){
+    const dot=document.createElement('div');
+    dot.className='dot'+(d<down?' used':d===down?' active':'');
     dots.appendChild(dot);
   }
-  document.getElementById('down-str').textContent = ['1st & Goal','2nd & Goal','3rd & Goal','4th & Goal'][down-1];
-  document.getElementById('ytg-num').textContent  = yardsToGo;
-  document.getElementById('team-row').innerHTML = selected.map(i=>`<div class="chip">${PLAYERS[i].emoji} ${PLAYERS[i].name}</div>`).join('');
-  const plays = getPlayOptions();
-  document.getElementById('play-options').innerHTML = plays.map(p =>
+  document.getElementById('down-str').textContent=['1st & Goal','2nd & Goal','3rd & Goal','4th & Goal'][down-1];
+  document.getElementById('ytg-num').textContent=yardsToGo;
+  document.getElementById('team-row').innerHTML=selected.map(i=>`<div class="chip">${PLAYERS[i].emoji} ${PLAYERS[i].name}</div>`).join('');
+  document.getElementById('def-row').innerHTML=defense.map(d=>`<div class="def-chip"><span class="def-chip-emoji">${d.player.emoji}</span><span class="def-chip-name">${d.player.name}</span><span class="def-chip-attr">${d.attr}</span></div>`).join('');
+  const plays=getPlayOptions();
+  document.getElementById('play-options').innerHTML=plays.map(p=>
     `<button class="btn btn-play${p.id==='miller'?' btn-play-special':''}" onclick="callPlay('${p.id}')">
        ${p.icon}&nbsp; ${p.name}
      </button>`).join('');
   show('s-play');
 }
 
-function callPlay(playId) {
-  const play = PLAYS.find(p=>p.id===playId);
-  const style = (playId==='miller'&&hasMohn()) ? 'special' : play.style;
-  const [td,yr,sk] = STYLE_PROBS[style];
-  const r = Math.random();
-  const raw = r<td?'td_attempt':r<td+yr?'yards':r<td+yr+sk?'sack':'turnover';
-  const outcome = (raw==='td_attempt'&&yardsToGo<=SCORE_RANGE)?'td':raw==='td_attempt'?'yards':raw;
+const OUTCOME_META={
+  td:      {emoji:'🏆',label:'TOUCHDOWN!!!',border:'#FFD700'},
+  yards:   {emoji:'📏',label:'GOT YARDS',border:'#7ec97e'},
+  sack:    {emoji:'💥',label:'SACK',border:'#ff9944'},
+  turnover:{emoji:'😱',label:'TURNOVER',border:'#e03030'},
+};
 
-  let newYtg = yardsToGo, yardsMoved=0, atOne=false;
-  if (outcome==='td') newYtg=0;
-  else if (outcome==='yards') {
-    const gain = randInt(10,18);
-    newYtg = yardsToGo - gain;
-    const isMM = playId==='miller'&&hasMohn();
-    if (!isMM && newYtg<1) { newYtg=1; atOne=true; }
-    newYtg = Math.max(newYtg,0);
-    yardsMoved = yardsToGo-newYtg;
-  } else if (outcome==='sack') {
-    const loss = randInt(8,13);
-    newYtg = Math.min(yardsToGo+loss, FIELD_MAX);
-    yardsMoved = -(newYtg-yardsToGo);
+function callPlay(playId) {
+  const play=ALL_PLAYS.find(p=>p.id===playId);
+  const style=(playId==='miller'&&hasMohn())?'special':play.style;
+  const [td,yr,sk]=STYLE_PROBS[style];
+  const r=Math.random();
+  const raw=r<td?'td_attempt':r<td+yr?'yards':r<td+yr+sk?'sack':'turnover';
+  const outcome=(raw==='td_attempt'&&yardsToGo<=SCORE_RANGE)?'td':raw==='td_attempt'?'yards':raw;
+
+  let newYtg=yardsToGo,yardsMoved=0,atOne=false;
+  if(outcome==='td')newYtg=0;
+  else if(outcome==='yards'){
+    const gain=randInt(10,18);
+    newYtg=yardsToGo-gain;
+    const isMM=playId==='miller'&&hasMohn();
+    if(!isMM&&newYtg<1){newYtg=1;atOne=true;}
+    newYtg=Math.max(newYtg,0);
+    yardsMoved=yardsToGo-newYtg;
+  } else if(outcome==='sack'){
+    const loss=randInt(8,13);
+    newYtg=Math.min(yardsToGo+loss,FIELD_MAX);
+    yardsMoved=-(newYtg-yardsToGo);
   }
 
-  document.getElementById('play-called').textContent = '▶ '+play.name;
+  document.getElementById('play-called').textContent='▶ '+play.name;
   ['slot-label','outcome-flavor'].forEach(id=>document.getElementById(id).textContent='');
   document.getElementById('next-btn').style.display='none';
   document.getElementById('slot-emoji').textContent='🏈';
   document.getElementById('slot-box').style.borderColor='var(--gold)';
   document.getElementById('yards-badge').textContent='';
   document.getElementById('yards-badge').className='yards-badge';
-  const ballPct = ytg => Math.min(Math.max(((FIELD_MAX-Math.max(ytg,0))/FIELD_MAX)*100, 2), 97);
-  const ball = document.getElementById('ball-icon');
+  const ballPct=ytg=>Math.min(Math.max(((FIELD_MAX-Math.max(ytg,0))/FIELD_MAX)*100,2),97);
+  const ball=document.getElementById('ball-icon');
   ball.style.transition='none'; ball.style.left=ballPct(yardsToGo)+'%'; void ball.offsetWidth; ball.style.transition='';
   show('s-outcome');
 
   let tick=0;
-  if (spinTimer) clearInterval(spinTimer);
-  spinTimer = setInterval(()=>{ document.getElementById('slot-emoji').textContent = SPIN_POOL[tick++%SPIN_POOL.length]; }, 85);
+  if(spinTimer)clearInterval(spinTimer);
+  spinTimer=setInterval(()=>{document.getElementById('slot-emoji').textContent=SPIN_POOL[tick++%SPIN_POOL.length];},85);
 
   setTimeout(()=>{
     clearInterval(spinTimer);
-    const meta = { td:{emoji:'🏆',label:'TOUCHDOWN!!!',border:'#FFD700'}, yards:{emoji:'📏',label:'GOT YARDS',border:'#7ec97e'}, sack:{emoji:'💥',label:'SACK',border:'#ff9944'}, turnover:{emoji:'😱',label:'TURNOVER',border:'#e03030'} }[outcome];
-    document.getElementById('slot-emoji').textContent = meta.emoji;
-    document.getElementById('slot-label').textContent = meta.label;
-    document.getElementById('slot-box').style.borderColor = meta.border;
-    setTimeout(()=>{ yardsToGo=newYtg; ball.style.left=ballPct(newYtg)+'%'; resolveOutcome(outcome,playId,yardsMoved,atOne); }, 350);
-  }, 1400);
+    const meta=OUTCOME_META[outcome];
+    document.getElementById('slot-emoji').textContent=meta.emoji;
+    document.getElementById('slot-label').textContent=meta.label;
+    document.getElementById('slot-box').style.borderColor=meta.border;
+    setTimeout(()=>{yardsToGo=newYtg;ball.style.left=ballPct(newYtg)+'%';resolveOutcome(outcome,playId,yardsMoved,atOne);},350);
+  },1400);
 }
 
-function resolveOutcome(outcome, playId, yardsMoved, atOne) {
-  const isMM = playId==='miller'&&hasMohn();
-  const badgeEl = document.getElementById('yards-badge');
-  if (outcome==='td') {
+function resolveOutcome(outcome,playId,yardsMoved,atOne) {
+  const isMM=playId==='miller'&&hasMohn();
+  const badgeEl=document.getElementById('yards-badge');
+  if(outcome==='td'){
     document.getElementById('ball-icon').style.left='102%';
-    const names = selected.map(i=>PLAYERS[i].name).join(' · ');
-    lastWinInfo = names+(isMM?'\nMohn + Miller Offense.':'\nAgainst all odds.');
+    const names=selected.map(i=>PLAYERS[i].name).join(' · ');
+    lastWinInfo=names+(isMM?'\nMohn + Miller Offense.':'\nAgainst all odds.');
     setTimeout(()=>{
-      document.getElementById('win-names').textContent = names;
-      document.getElementById('win-flavor').textContent = isMM
-        ? pick(["Mohn finds a hole — somehow, always finds a hole.","The Miller offense. You either run it or you don't score.","Everyone knew the play. Nobody could stop it."]) + ' THE PARK GOES WILD!'
-        : pick(["No way. No way that worked.","Don't tell anyone how you did that."]) + ' THE PARK GOES WILD!';
-      document.getElementById('share-btn').style.display = navigator.share?'inline-block':'none';
-      show('s-win'); confetti();
-    }, 700);
+      document.getElementById('win-names').textContent=names;
+      document.getElementById('win-flavor').textContent=(isMM?pick(FLAVOR.td_mohn):pick(FLAVOR.td_lucky))+' THE PARK GOES WILD!';
+      document.getElementById('share-btn').style.display=navigator.share?'inline-block':'none';
+      show('s-win');confetti();
+    },700);
     return;
   }
-  if (outcome==='turnover') {
+  if(outcome==='turnover'){
     document.getElementById('ball-icon').style.left='-10%';
-    const desc = pick(["You coughed it up. Other team has the ball.","Loose ball. They ran it back."]);
+    const desc=pick(FLAVOR.to_desc);
     document.getElementById('outcome-flavor').textContent=desc;
     badgeEl.textContent='TURNOVER'; badgeEl.className='yards-badge danger';
     document.getElementById('slot-box').classList.add('shake');
     setTimeout(()=>document.getElementById('slot-box').classList.remove('shake'),550);
-    setTimeout(()=>{ document.getElementById('loss-head').textContent='TURNOVER'; document.getElementById('loss-reason').textContent=desc; document.getElementById('loss-nudge').textContent='Different squad. Different result.'; show('s-loss'); },1300);
+    setTimeout(()=>{document.getElementById('loss-head').textContent='TURNOVER';document.getElementById('loss-reason').textContent=desc;document.getElementById('loss-nudge').textContent='Different squad. Different result.';show('s-loss');},1300);
     return;
   }
-  if (outcome==='yards') {
-    if (atOne) { nearMissCount++; badgeEl.textContent='1-YARD LINE — SO CLOSE'; badgeEl.className='yards-badge warning near-miss-flash'; document.getElementById('outcome-flavor').textContent='ONE YARD. You can smell the end zone.'; }
-    else { badgeEl.textContent=`+${yardsMoved} yards · ${yardsToGo} to go`; document.getElementById('outcome-flavor').textContent=pick(["Good chunk play. Keep pushing.","Picked up some real estate.","Moving the chains."]); }
+  if(outcome==='yards'){
+    if(atOne){nearMissCount++;badgeEl.textContent='1-YARD LINE — SO CLOSE';badgeEl.className='yards-badge warning near-miss-flash';document.getElementById('outcome-flavor').textContent=pick(FLAVOR.one_yard);}
+    else{badgeEl.textContent=`+${yardsMoved} yards · ${yardsToGo} to go`;document.getElementById('outcome-flavor').textContent=pick(FLAVOR.yards);}
   } else {
     document.getElementById('slot-box').classList.add('shake');
     setTimeout(()=>document.getElementById('slot-box').classList.remove('shake'),550);
-    badgeEl.textContent=`${Math.abs(yardsMoved)} yards lost · ${yardsToGo} to go`; badgeEl.className='yards-badge danger';
-    document.getElementById('outcome-flavor').textContent=pick(["Got dropped in the backfield.","They read the play before you called it.","Stuffed at the line."]);
+    badgeEl.textContent=`${Math.abs(yardsMoved)} yards lost · ${yardsToGo} to go`;badgeEl.className='yards-badge danger';
+    document.getElementById('outcome-flavor').textContent=pick(FLAVOR.sack);
   }
   down++;
-  if (down>4) {
-    setTimeout(()=>{ document.getElementById('loss-head').textContent='STUFFED'; document.getElementById('loss-reason').textContent="Couldn't punch it in on 4 downs."; document.getElementById('loss-nudge').textContent=nearMissCount>=2?'You were right there every time. Different squad?':'Keep experimenting.'; show('s-loss'); },1200);
+  if(down>4){
+    setTimeout(()=>{document.getElementById('loss-head').textContent='STUFFED';document.getElementById('loss-reason').textContent="Couldn't punch it in on 4 downs.";document.getElementById('loss-nudge').textContent=nearMissCount>=2?'You were right there. Different squad?':'Keep experimenting.';show('s-loss');},1200);
   } else {
     document.getElementById('next-btn').style.display='inline-block';
   }
 }
 
-function nextPlay() { showPlay(); }
+function nextPlay(){showPlay();}
 
-function shareResult() {
-  if (!navigator.share) return;
+function shareResult(){
+  if(!navigator.share)return;
   navigator.share({title:'Xylon Park Tuddies',text:`TUDDY!! 🏆\n${lastWinInfo}\n\nCan you find the secret play?`,url:window.location.href}).catch(()=>{});
 }
 
-function confetti() {
-  const wrap = document.getElementById('confetti-wrap');
+function confetti(){
+  const wrap=document.getElementById('confetti-wrap');
   wrap.innerHTML='';
   const colors=['#FFD700','#ff6b6b','#7ec97e','#87ceeb','#ff69b4','#ffa500','#fff'];
   for(let i=0;i<100;i++){
-    const p=document.createElement('div'); p.className='confetti-piece';
+    const p=document.createElement('div');p.className='confetti-piece';
     const s=Math.random()*10+6;
     p.style.cssText=`left:${Math.random()*100}vw;width:${s}px;height:${s*1.4}px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${Math.random()*2+1.5}s;animation-delay:${Math.random()*.7}s;`;
     wrap.appendChild(p);
@@ -470,8 +664,8 @@ function confetti() {
   setTimeout(()=>wrap.innerHTML='',5000);
 }
 
-function resetGame() { if(spinTimer)clearInterval(spinTimer); startDraft(); }
-show('s-title');
+function resetGame(){if(spinTimer)clearInterval(spinTimer);startDraft();}
+checkPassword();
 </script>
 </body>
 </html>
