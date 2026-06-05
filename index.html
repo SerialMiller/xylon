@@ -762,7 +762,10 @@ function executePlay(playId, play) {
   else if(outcome==='yards'){
     const gain=randInt(10,18);
     newYtg=yardsToGo-gain;
-    if(!isMM && tc===0 && newYtg<1){newYtg=1;atOne=true;}
+    if(!isMM && tc===0 && newYtg<1){
+      if(Math.random()<.10){outcome='td';newYtg=0;}
+      else{newYtg=1;atOne=true;}
+    }
     // top-tier players can punch through to the end zone on a yards play
     if(!isMM && tc>0 && newYtg<=0){outcome='td';newYtg=0;}
     else newYtg=Math.max(newYtg,0);
